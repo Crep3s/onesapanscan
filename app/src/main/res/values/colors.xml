@@ -13,4 +13,5 @@
     <color name="product_full_collect">#C8E6C9</color>    <!-- Светло-зеленый -->
     <color name="keywords_background">#E3F2FD</color>    <!-- Светло-синий -->
     <color name="description_background">#FFF9C4</color>
+    <color name="product_not_collected">#FFFFFFFF</color>
 </resources>

@@ -21,6 +21,10 @@ class ScannerActivity : AppCompatActivity() {
 
     private lateinit var cameraExecutor: ExecutorService
 
+    // --- ДОБАВЛЕНО ИЗМЕНЕНИЕ 1: Флаг для блокировки повторного сканирования ---
+    @Volatile
+    private var isBarcodeHandled = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_scanner)
@@ -45,6 +49,15 @@ class ScannerActivity : AppCompatActivity() {
                 .build()
                 .also {
                     it.setAnalyzer(cameraExecutor, BarcodeAnalyzer { barcode ->
+                        // --- ДОБАВЛЕНО ИЗМЕНЕНИЕ 2: Логика блокировки ---
+                        // Проверяем, не был ли штрих-код уже обработан
+                        if (isBarcodeHandled) {
+                            return@BarcodeAnalyzer
+                        }
+                        // Немедленно блокируем дальнейшую обработку
+                        isBarcodeHandled = true
+
+                        // Возвращаем результат только один раз
                         val resultIntent = Intent()
                         resultIntent.putExtra("scanned_barcode", barcode)
                         setResult(RESULT_OK, resultIntent)
@@ -60,7 +73,6 @@ class ScannerActivity : AppCompatActivity() {
         }, ContextCompat.getMainExecutor(this))
     }
 
-    // ... Скопируйте сюда `allPermissionsGranted`, `onRequestPermissionsResult`, `onDestroy` и `companion object` из ChecklistActivity
     private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
         ContextCompat.checkSelfPermission(baseContext, it) == PackageManager.PERMISSION_GRANTED
     }

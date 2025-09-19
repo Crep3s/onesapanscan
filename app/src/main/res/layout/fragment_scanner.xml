@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="16dp"
+    tools:context=".ui.scanner.ScannerFragment">
+
+    <EditText
+        android:id="@+id/order_id_input"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Отсканируйте номер заказа"
+        android:importantForAutofill="no"
+        android:inputType="text"
+        android:gravity="center"
+        android:textSize="20sp">
+        <requestFocus />
+    </EditText>
+
+    <Button
+        android:id="@+id/load_order_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Загрузить заказ"
+        android:textSize="18sp" />
+
+</LinearLayout>

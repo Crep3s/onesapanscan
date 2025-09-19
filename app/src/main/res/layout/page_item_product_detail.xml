@@ -12,6 +12,7 @@
         android:layout_height="match_parent"
         android:layout_above="@+id/bottom_panel"
         android:fillViewport="true">
+
         <LinearLayout
             android:id="@+id/detail_item_layout"
             android:layout_width="match_parent"
@@ -38,72 +39,173 @@
                 android:textStyle="bold"
                 tools:text="Название товара" />
 
-            <TextView
-                android:id="@+id/detail_product_article"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:textSize="18sp"
-                tools:text="Артикул: 123456789" />
+                android:layout_marginTop="16dp"
+                android:baselineAligned="false"
+                android:orientation="horizontal"
+                android:weightSum="3">
 
-            <TextView
-                android:id="@+id/detail_product_stock"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:textSize="18sp"
-                tools:text="На складе: 6 шт." />
+                <!-- Блок "Артикул" -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/detail_product_weight"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:textSize="18sp"
-                tools:text="Общий вес: 1.0000 кг" />
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_barcode_24"
+                        app:tint="?attr/colorControlNormal" />
 
-            <TextView
-                android:id="@+id/detail_product_description"
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="Артикул"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:id="@+id/detail_product_article"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/black"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        tools:text="1125244" />
+                </LinearLayout>
+
+                <!-- Блок "На складе" -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:orientation="vertical">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_inventory_24"
+                        app:tint="?attr/colorControlNormal" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="На складе"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:id="@+id/detail_product_stock"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/black"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        tools:text="6 шт." />
+                </LinearLayout>
+
+                <!-- Блок "Общий вес" -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:orientation="vertical">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_weight_24"
+                        app:tint="?attr/colorControlNormal" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="Общий вес"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:id="@+id/detail_product_weight"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/black"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        tools:text="1.5 кг" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="16dp"
+                android:background="?android:attr/listDivider" />
+
+            <!-- Блок для описания с иконкой -->
+            <LinearLayout
+                android:id="@+id/description_layout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:background="@color/description_background"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
                 android:padding="12dp"
-                android:textAlignment="viewStart"
-                android:textColor="@color/black"
-                android:textSize="18sp"
                 android:visibility="gone"
-                tools:text="Описание товара из SalesDrive"
-                tools:visibility="visible" />
+                tools:visibility="visible">
 
-            <!-- КЛЮЧЕВЫЕ СЛОВА (KEYWORDS) -->
-            <TextView
-                android:id="@+id/detail_product_keywords"
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_marginEnd="12dp"
+                    android:src="@drawable/ic_info_24"
+                    app:tint="?attr/colorControlNormal" />
+
+                <TextView
+                    android:id="@+id/detail_product_description"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textColor="@color/black"
+                    android:textSize="18sp"
+                    tools:text="Описание товара из SalesDrive" />
+            </LinearLayout>
+
+            <!-- Блок для местоположения с иконкой -->
+            <LinearLayout
+                android:id="@+id/keywords_layout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:background="@color/keywords_background"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
                 android:padding="12dp"
-                android:textAlignment="viewStart"
-                android:textColor="@color/black"
-                android:textSize="18sp"
                 android:visibility="gone"
-                tools:text="Где находится: Стеллаж 5, полка 3"
-                tools:visibility="visible" />
+                tools:visibility="visible">
 
-            <!-- БЛОК ДЛЯ ОТОБРАЖЕНИЯ ВСЕХ ХАРАКТЕРИСТИК -->
-            <TextView
-                android:id="@+id/detail_product_characteristics"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:background="#E3F2FD"
-                android:padding="8dp"
-                android:textAlignment="viewStart"
-                android:textColor="@color/black"
-                android:visibility="gone"
-                tools:text="Вес: 225\nМатериал: Сталь"
-                tools:visibility="visible" />
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_marginEnd="12dp"
+                    android:src="@drawable/ic_place_24"
+                    app:tint="?attr/colorControlNormal" />
+
+                <TextView
+                    android:id="@+id/detail_product_keywords"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textColor="@color/black"
+                    android:textSize="18sp"
+                    tools:text="Стеллаж 5, полка 3" />
+            </LinearLayout>
 
         </LinearLayout>
     </ScrollView>
@@ -165,6 +267,7 @@
 
     </LinearLayout>
 
+    <!-- Экран ошибки -->
     <LinearLayout
         android:id="@+id/scan_error_layout"
         android:layout_width="match_parent"

@@ -6,7 +6,6 @@
     android:layout_height="match_parent"
     tools:context=".ChecklistActivity">
 
-    <!-- Карточка с комментарием к заказу -->
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/order_comment_card"
         android:layout_width="match_parent"
@@ -25,30 +24,53 @@
             android:textColor="@color/black"
             android:textSize="16sp"
             tools:text="Комментарий к заказу от клиента или менеджера" />
-
     </com.google.android.material.card.MaterialCardView>
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/products_recycler_view"
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@id/order_comment_card"
-        android:layout_above="@+id/finish_order_button"
-        android:clipToPadding="false"
-        android:paddingVertical="4dp"
-        tools:listitem="@layout/list_item_product" />
+        android:layout_below="@id/order_comment_card">
 
-    <Button
-        android:id="@+id/finish_order_button"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_margin="8dp"
-        android:text="Вернуться в главное меню"
-        android:visibility="gone"
-        tools:visibility="visible" />
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/products_recycler_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:focusable="false"
+            android:focusableInTouchMode="false"
+            android:paddingBottom="72dp"
+            android:paddingTop="4dp"
+            tools:listitem="@layout/list_item_product" />
 
-    <!-- Экран "Заказ собран" -->
+        <Button
+            android:id="@+id/finish_order_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:layout_margin="8dp"
+            android:text="Вернуться в главное меню"
+            android:visibility="gone"
+            tools:visibility="visible" />
+
+        <TextView
+            android:id="@+id/scan_feedback_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:layout_margin="8dp"
+            android:background="@drawable/article_background"
+            android:backgroundTint="#333333"
+            android:elevation="4dp"
+            android:gravity="center"
+            android:padding="16dp"
+            android:textColor="@android:color/white"
+            android:textSize="18sp"
+            android:visibility="gone"
+            tools:text="Отмечен: Латексный жгут"
+            tools:visibility="visible" />
+
+    </FrameLayout>
+
     <LinearLayout
         android:id="@+id/order_complete_layout"
         android:layout_width="match_parent"
@@ -56,16 +78,13 @@
         android:background="?android:colorBackground"
         android:gravity="center"
         android:orientation="vertical"
-        android:visibility="gone"
-        tools:visibility="visible">
+        android:visibility="gone">
 
-        <!-- ИЗМЕНЕНИЕ: Используем качественную векторную иконку -->
         <ImageView
             android:layout_width="120dp"
             android:layout_height="120dp"
             android:src="@drawable/ic_checkmark_done"
             app:tint="@color/purple_500" />
-
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -73,22 +92,36 @@
             android:text="Заказ успешно собран!"
             android:textSize="24sp"
             android:textStyle="bold" />
-
         <Button
             android:id="@+id/back_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:text="Вернуться к заказам" />
-
     </LinearLayout>
+
     <View
         android:id="@+id/error_flash_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:alpha="0"
         android:background="#CCFF0000"
-        android:visibility="gone"
-        tools:visibility="visible" />
+        android:visibility="gone" />
+
+    <ProgressBar
+        android:id="@+id/loading_progress_bar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/empty_order_message_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:text="В этом заказе нет товаров"
+        android:textSize="18sp"
+        android:visibility="gone" />
 
 </RelativeLayout>

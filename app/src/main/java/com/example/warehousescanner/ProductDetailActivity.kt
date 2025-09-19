@@ -3,15 +3,12 @@ package com.example.warehousescanner
 
 import android.Manifest
 import android.app.Activity
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.os.VibrationEffect
-import android.os.Vibrator
 import android.util.Log
 import android.view.KeyEvent
 import android.view.View
@@ -31,6 +28,7 @@ import androidx.viewpager2.widget.ViewPager2
 import com.example.warehousescanner.network.Product
 import com.example.warehousescanner.scanner.BarcodeAnalyzer
 import com.example.warehousescanner.ui.ProductDetailAdapter
+import com.example.warehousescanner.ui.SoundManager
 import com.example.warehousescanner.ui.handleScanError
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import java.util.concurrent.ExecutorService
@@ -43,20 +41,18 @@ class ProductDetailActivity : AppCompatActivity() {
     private lateinit var adapter: ProductDetailAdapter
     private lateinit var cameraExecutor: ExecutorService
     private var orderComment: String? = null
-
     private lateinit var cameraContainer: FrameLayout
     private var cameraProvider: ProcessCameraProvider? = null
-
     private val barcodeStringBuilder = StringBuilder()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_product_detail)
-
+        SoundManager.init(this)
         initViews()
 
         products = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            intent.getSerializableExtra(EXTRA_PRODUCTS, ArrayList::class.java) as? MutableList<Product>
+            intent.getSerializableExtra(EXTRA_PRODUCTS, java.util.ArrayList::class.java) as? MutableList<Product>
         } else {
             @Suppress("DEPRECATION")
             intent.getSerializableExtra(EXTRA_PRODUCTS) as? MutableList<Product>
@@ -75,7 +71,6 @@ class ProductDetailActivity : AppCompatActivity() {
                 }
             }
         )
-
         viewPager.adapter = adapter
         viewPager.setCurrentItem(startPosition, false)
 
@@ -101,7 +96,7 @@ class ProductDetailActivity : AppCompatActivity() {
                 }
             } else {
                 val char = event.unicodeChar.toChar()
-                if (char.isLetterOrDigit()) {
+                if (char.isLetterOrDigit() || char == '-') {
                     barcodeStringBuilder.append(char)
                 }
             }
@@ -122,47 +117,64 @@ class ProductDetailActivity : AppCompatActivity() {
         adapter.notifyItemChanged(position)
     }
 
+    // --- ИЗМЕНЕНИЕ: ПОЛНОСТЬЮ НОВАЯ ЛОГИКА ОБРАБОТКИ ШТРИХ-КОДА ---
     private fun onBarcodeDecoded(barcode: String) {
         val currentPosition = viewPager.currentItem
         val currentProduct = products[currentPosition]
 
-        if (currentProduct.article != barcode) {
-            handleScanErrorLocal("Неверный штрих-код!")
-            return
-        }
-
-        if (currentProduct.scannedQuantity < currentProduct.quantity) {
-            currentProduct.scannedQuantity += 1.0
-            adapter.notifyItemChanged(currentPosition)
-
-            if (currentProduct.scannedQuantity >= currentProduct.quantity) {
-                confirmCollection(currentPosition, currentProduct.scannedQuantity)
+        // Сценарий 1: Отсканирован штрих-код ТЕКУЩЕГО товара (самый частый случай)
+        if (currentProduct.article == barcode) {
+            if (currentProduct.scannedQuantity < currentProduct.quantity) {
+                currentProduct.scannedQuantity += 1.0
+                adapter.notifyItemChanged(currentPosition)
+                if (currentProduct.scannedQuantity >= currentProduct.quantity) {
+                    confirmCollection(currentPosition, currentProduct.scannedQuantity)
+                }
+            } else {
+                Toast.makeText(this, "Уже собрано достаточное количество", Toast.LENGTH_SHORT).show()
             }
-
-        } else {
-            Toast.makeText(this, "Уже собрано достаточное количество", Toast.LENGTH_SHORT).show()
+            return // Выходим, задача выполнена
         }
+
+        // Сценарий 2: Отсканирован штрих-код ДРУГОГО товара, но из ЭТОГО ЖЕ заказа
+        val otherProductInOrder = products.find { it.article == barcode }
+        if (otherProductInOrder != null) {
+            val newPosition = products.indexOf(otherProductInOrder)
+            if (newPosition != -1) {
+                viewPager.setCurrentItem(newPosition, true) // Просто переключаемся на него
+                Toast.makeText(this, "Переключено на: ${otherProductInOrder.name}", Toast.LENGTH_SHORT).show()
+            }
+            return // Выходим, задача выполнена
+        }
+
+        // Сценарий 3: Отсканирован штрих-код, которого НЕТ в этом заказе
+        SoundManager.playErrorSound()
+        handleScanErrorLocal("Товар не из этого заказа!")
     }
 
     private fun confirmCollection(position: Int, quantity: Double) {
         val product = products[position]
-        if (quantity == product.quantity) {
-            product.scannedQuantity = quantity
-            product.isScanned = true
-            adapter.notifyItemChanged(position)
-
-            Handler(Looper.getMainLooper()).postDelayed({
-                if (position < products.size - 1) {
-                    viewPager.setCurrentItem(position + 1, true)
-                } else {
-                    Toast.makeText(this, "Заказ собран!", Toast.LENGTH_LONG).show()
-                    setResultAndFinish()
-                    finish()
-                }
-            }, 300)
-        } else {
+        if (quantity != product.quantity) {
             Toast.makeText(this, "Введено неверное количество", Toast.LENGTH_SHORT).show()
+            return
         }
+        product.scannedQuantity = quantity
+        product.isScanned = true
+        adapter.notifyItemChanged(position)
+
+        Handler(Looper.getMainLooper()).postDelayed({
+            val allProductsScanned = products.all { it.isScanned }
+            if (allProductsScanned) {
+                Toast.makeText(this, "Заказ собран!", Toast.LENGTH_LONG).show()
+                setResultAndFinish()
+                finish()
+            } else {
+                val nextUnscannedPosition = products.indexOfFirst { !it.isScanned }
+                if (nextUnscannedPosition != -1) {
+                    viewPager.setCurrentItem(nextUnscannedPosition, true)
+                }
+            }
+        }, 300)
     }
 
     private fun setResultAndFinish() {
@@ -171,21 +183,20 @@ class ProductDetailActivity : AppCompatActivity() {
         setResult(Activity.RESULT_OK, resultIntent)
     }
 
+    // --- ИЗМЕНЕНИЕ: ВОЗВРАЩАЕМ ЭТОТ МЕТОД ДЛЯ ОТОБРАЖЕНИЯ ОШИБКИ ---
     private fun handleScanErrorLocal(message: String) {
         val currentView = (viewPager.getChildAt(0) as? RecyclerView)?.layoutManager?.findViewByPosition(viewPager.currentItem)
         if (currentView == null) {
             Toast.makeText(this, message, Toast.LENGTH_LONG).show()
             return
         }
-
         val scanErrorLayout = currentView.findViewById<View>(R.id.scan_error_layout)
         val scanErrorText = currentView.findViewById<TextView>(R.id.scan_error_text)
-
         scanErrorText.text = message
-        this.handleScanError(scanErrorLayout, message)
+        handleScanError(scanErrorLayout)
     }
 
-    private fun openCamera() {
+    private fun openCamera() { /* ... без изменений ... */
         if (allPermissionsGranted()) {
             cameraContainer.visibility = View.VISIBLE
             startCamera()
@@ -194,12 +205,12 @@ class ProductDetailActivity : AppCompatActivity() {
         }
     }
 
-    private fun hideCamera() {
+    private fun hideCamera() { /* ... без изменений ... */
         cameraContainer.visibility = View.GONE
         cameraProvider?.unbindAll()
     }
 
-    private fun startCamera() {
+    private fun startCamera() { /* ... без изменений ... */
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
         cameraProviderFuture.addListener({
             cameraProvider = cameraProviderFuture.get()
@@ -226,11 +237,11 @@ class ProductDetailActivity : AppCompatActivity() {
         }, ContextCompat.getMainExecutor(this))
     }
 
-    private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
+    private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all { /* ... без изменений ... */
         ContextCompat.checkSelfPermission(baseContext, it) == PackageManager.PERMISSION_GRANTED
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) { /* ... без изменений ... */
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQUEST_CODE_PERMISSIONS) {
             if (allPermissionsGranted()) {
@@ -241,7 +252,7 @@ class ProductDetailActivity : AppCompatActivity() {
         }
     }
 
-    override fun onDestroy() {
+    override fun onDestroy() { /* ... без изменений ... */
         super.onDestroy()
         cameraExecutor.shutdown()
     }

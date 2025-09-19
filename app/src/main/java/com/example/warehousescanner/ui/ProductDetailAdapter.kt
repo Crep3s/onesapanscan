@@ -2,6 +2,8 @@
 package com.example.warehousescanner.ui
 
 import android.content.Intent
+import android.os.Handler      // <-- ИСПРАВЛЕНИЕ 1: ДОБАВЛЕН ИМПОРТ
+import android.os.Looper       // <-- ИСПРАВЛЕНИЕ 2: ДОБАВЛЕН ИМПОРТ
 import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
@@ -10,6 +12,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.core.widget.doAfterTextChanged
@@ -24,7 +27,6 @@ class ProductDetailAdapter(
     private val products: List<Product>,
     private val onTakeClick: (position: Int, quantity: Double) -> Unit,
     private val onReturnClick: (position: Int) -> Unit,
-    // --- ИСПРАВЛЕНИЕ №1: Добавляем новый callback для сохранения количества ---
     private val onQuantityChanged: (position: Int, newQuantity: Double) -> Unit
 ) : RecyclerView.Adapter<ProductDetailAdapter.ViewHolder>() {
 
@@ -56,49 +58,53 @@ class ProductDetailAdapter(
         // --- Биндинг данных ---
         holder.name.text = product.documentName ?: product.name
         holder.image.load(product.photoUrl)
-        holder.article.text = "Артикул: ${product.article ?: "N/A"}"
+        holder.article.text = product.article ?: "N/A"
+
         val currentStock = product.stockBalance?.get("1") ?: 0.0
         val stockBeforePicking = currentStock + product.quantity
-        holder.stock.text = "На складе: ${stockBeforePicking.toFormattedString()} шт."
+        holder.stock.text = "${stockBeforePicking.toFormattedString()} шт."
 
-        // --- ИСПРАВЛЕНИЕ №2: ФИНАЛЬНАЯ, ПРАВИЛЬНАЯ ЛОГИКА ВЕСА ---
+        // --- Логика веса ---
         var totalWeight = 0.0
         var weightUnit = ""
         var isWeightAvailable = false
-
         val weightFromManufacturer = product.manufacturer?.toDoubleOrNull()
 
         if (weightFromManufacturer != null && weightFromManufacturer > 0) {
-            // Если производитель - число, считаем, что это граммы, и НЕ конвертируем
             totalWeight = weightFromManufacturer * product.quantity
-            weightUnit = "г" // Указываем единицу измерения "граммы"
+            weightUnit = "г"
             isWeightAvailable = true
         } else if (product.mass != null && product.mass > 0) {
-            // Иначе, если производитель пуст, используем стандартный вес в кг
             totalWeight = product.mass * product.quantity
-            weightUnit = "кг" // Указываем единицу измерения "килограммы"
+            weightUnit = "кг"
             isWeightAvailable = true
         }
 
         if (isWeightAvailable) {
-            holder.weight.text = "Общий вес: ${totalWeight.toSmartFormattedString()} $weightUnit"
-            holder.weight.visibility = View.VISIBLE
+            holder.weight.text = "${totalWeight.toSmartFormattedString()} $weightUnit"
+            (holder.weight.parent as View).visibility = View.VISIBLE // Управляем видимостью родительского LinearLayout
         } else {
-            holder.weight.visibility = View.GONE
+            (holder.weight.parent as View).visibility = View.GONE
         }
 
+        // --- Управление видимостью блоков с иконками ---
+        val descriptionLayout = holder.itemView.findViewById<LinearLayout>(R.id.description_layout)
+        val keywordsLayout = holder.itemView.findViewById<LinearLayout>(R.id.keywords_layout)
+
         if (!product.description.isNullOrBlank()) {
-            holder.description.text = "Описание: ${product.description}"
-            holder.description.visibility = View.VISIBLE
+            holder.description.text = product.description
+            descriptionLayout.visibility = View.VISIBLE
         } else {
-            holder.description.visibility = View.GONE
+            descriptionLayout.visibility = View.GONE
         }
+
         if (!product.keywords.isNullOrBlank()) {
-            holder.keywords.text = "Где находится: ${product.keywords}"
-            holder.keywords.visibility = View.VISIBLE
+            holder.keywords.text = product.keywords
+            keywordsLayout.visibility = View.VISIBLE
         } else {
-            holder.keywords.visibility = View.GONE
+            keywordsLayout.visibility = View.GONE
         }
+
         holder.image.setOnClickListener {
             val context = holder.itemView.context
             val intent = Intent(context, ImageGalleryActivity::class.java).apply {
@@ -110,9 +116,9 @@ class ProductDetailAdapter(
             }
             context.startActivity(intent)
         }
+
         // --- Логика для EditText и кнопок ---
         holder.quantityTotalLabel.text = "/ ${product.quantity.toFormattedString()} шт."
-
         textWatchers[holder.adapterPosition]?.let { holder.quantityInput.removeTextChangedListener(it) }
         holder.quantityInput.setText(product.scannedQuantity.toFormattedString())
 
@@ -130,13 +136,11 @@ class ProductDetailAdapter(
             holder.takeButton.background = ContextCompat.getDrawable(holder.itemView.context, R.drawable.button_background_selector)
             holder.quantityInput.isEnabled = true
             holder.incrementButton.isEnabled = true
-
             holder.takeButton.isEnabled = (product.scannedQuantity == product.quantity)
 
             val textWatcher = holder.quantityInput.doAfterTextChanged { text ->
                 val enteredQuantity = text.toString().toDoubleOrNull() ?: 0.0
                 holder.takeButton.isEnabled = (enteredQuantity == product.quantity)
-                // Вызываем callback при каждом изменении, чтобы сохранить состояние
                 onQuantityChanged(holder.adapterPosition, enteredQuantity)
             }
             textWatchers[holder.adapterPosition] = textWatcher
@@ -150,8 +154,8 @@ class ProductDetailAdapter(
                 val currentQuantity = holder.quantityInput.text.toString().toDoubleOrNull() ?: 0.0
                 val nextInteger = floor(currentQuantity).toInt() + 1
                 holder.quantityInput.setText(nextInteger.toString())
-                if (nextInteger >= product.quantity && product.quantity <= 1.0) {
-                    holder.takeButton.performClick()
+                if (nextInteger >= product.quantity && product.quantity == 1.0) { // Быстрый клик для товаров в 1 шт.
+                    Handler(Looper.getMainLooper()).postDelayed({ holder.takeButton.performClick() }, 100)
                 }
             }
         }

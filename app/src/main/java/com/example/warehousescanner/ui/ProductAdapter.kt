@@ -28,7 +28,7 @@ class ProductAdapter(
 
         fun bind(product: Product, clickListener: (Int) -> Unit) {
             name.text = product.documentName ?: product.name
-            article.text = "Артикул: ${product.article ?: "N/A"}"
+            article.text = product.article ?: "N/A" // Убираем префикс
             quantity.text = "${product.scannedQuantity.toFormattedString()}/${product.quantity.toFormattedString()}"
 
             image.load(product.photoUrl) {
@@ -36,7 +36,6 @@ class ProductAdapter(
                 error(R.drawable.ic_launcher_foreground)
             }
 
-            // --- НОВАЯ ЛОГИКА ЦВЕТОВ ---
             when {
                 // Полностью собран -> зеленый
                 product.isScanned -> {
@@ -54,7 +53,6 @@ class ProductAdapter(
                     cardView.setCardBackgroundColor(ContextCompat.getColor(itemView.context, R.color.white))
                 }
             }
-
             itemView.setOnClickListener {
                 clickListener(adapterPosition)
             }

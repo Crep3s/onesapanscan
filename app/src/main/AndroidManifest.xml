@@ -32,7 +32,7 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity> <!-- ДОБАВЬТЕ ЭТОТ КОД ДЛЯ ВТОРОГО ЭКРАНА -->
+        </activity>
         <activity android:name=".ChecklistActivity" />
     </application>
 

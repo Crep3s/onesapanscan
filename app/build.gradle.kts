@@ -7,15 +7,19 @@ if (localPropertiesFile.exists()) {
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    // ИСПРАВЛЕНИЕ: Используем alias, как и для других плагинов
+    alias(libs.plugins.ksp)
 }
 android {
     namespace = "com.example.warehousescanner"
-    compileSdk = 36
+    // ИСПРАВЛЕНИЕ: Используем стабильную версию SDK
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.example.warehousescanner"
         minSdk = 24
-        targetSdk = 36
+        // ИСПРАВЛЕНИЕ: Используем стабильную версию SDK
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 
@@ -55,6 +59,8 @@ dependencies {
     implementation("com.google.android.material:material:1.12.0")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     implementation(libs.androidx.activity)
+    implementation(libs.androidx.navigation.fragment.ktx)
+    implementation(libs.androidx.navigation.ui.ktx)
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
@@ -81,5 +87,19 @@ dependencies {
     implementation("androidx.camera:camera-lifecycle:${cameraXVersion}")
     implementation("androidx.camera:camera-view:${cameraXVersion}")
     implementation("com.google.mlkit:barcode-scanning:17.2.0")
+    val room_version = "2.6.1"
+    implementation("androidx.room:room-runtime:$room_version")
+    ksp("androidx.room:room-compiler:$room_version") // Используем ksp вместо kapt
+    implementation("androidx.room:room-ktx:$room_version")
 
+// --- GOOGLE GSON --- (для конвертации списков в JSON)
+    implementation("com.google.code.gson:gson:2.10.1")
+    implementation(libs.androidx.navigation.fragment.ktx)
+    implementation(libs.androidx.navigation.ui.ktx)
+// --- MATERIAL DESIGN --- (для BottomNavigationView)
+    implementation("com.google.android.material:material:1.12.0")
+    implementation(libs.androidx.fragment.ktx)
+    // --- NAVIGATION COMPONENT ---
+    implementation(libs.androidx.navigation.fragment.ktx)
+    implementation(libs.androidx.navigation.ui.ktx)
 }

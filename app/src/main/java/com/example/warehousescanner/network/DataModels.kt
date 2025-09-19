@@ -14,7 +14,7 @@ data class Order(
     @SerializedName("id")
     val id: Int,
     @SerializedName("products")
-    val products: List<ProductInOrder>,
+    val products: List<ProductInOrder>?,
     @SerializedName("comment")
     val comment: String?
 )
